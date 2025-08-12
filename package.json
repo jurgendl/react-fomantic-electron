@@ -1,0 +1,50 @@
+{
+	"name": "react-fomantic-electron",
+	"description": "react-fomantic-electron",
+	"keywords": [],
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"license": "UNLICENSED",
+	"scripts": {
+		"dev": "vite",
+		"preview": "vite preview",
+		"build": "tsc -b && vite build",
+		"start": "npm run build && electron .",
+		"lint": "eslint .",
+		"format": "prettier --write ./src",
+		"clean": "node clean.cjs"
+	},
+	"main": "electron/main.js",
+	"author": {
+		"name": "author",
+		"email": "test@hotmail.com"
+	},
+	"dependencies": {
+		"fomantic-ui": "^2.9.4",
+		"jquery": "^3.7.1",
+		"electron-is-dev": "^3.0.1",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"swr": "^2.3.4"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.30.1",
+		"@types/jquery": "^3.5.32",
+		"@types/react": "^19.1.8",
+		"@types/react-dom": "^19.1.6",
+		"@vitejs/plugin-react": "^4.6.0",
+		"concurrently": "^9.2.0",
+		"cross-env": "^10.0.0",
+		"electron": "^37.2.5",
+		"electron-builder": "^26.0.12",
+		"eslint": "^9.30.1",
+		"eslint-plugin-react-hooks": "^5.2.0",
+		"eslint-plugin-react-refresh": "^0.4.20",
+		"globals": "^16.3.0",
+		"sass-embedded": "^1.89.2",
+		"typescript": "~5.8.3",
+		"typescript-eslint": "^8.35.1",
+		"vite": "^7.0.4"
+	}
+}
