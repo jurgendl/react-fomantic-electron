@@ -25,3 +25,5 @@ dist-ssr
 /yarn.lock
 /release-builds
 /package-lock.json
+
+/semantic

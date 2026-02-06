@@ -16,26 +16,6 @@ This will install all dependencies listed in `package.json`.
 
 ---
 
-## 2️⃣ Initialize Tailwind CSS
-
-If Tailwind is not yet configured:
-
-```bash
-# Install Tailwind and PostCSS
-yarn add -D tailwindcss@3 postcss autoprefixer
-
-# Generate Tailwind config files
-npx tailwindcss init -p
-```
-
-This creates:
-- `tailwind.config.js`
-- `postcss.config.js`
-
-You can now use Tailwind classes in your project.
-
----
-
 ## 3️⃣ Initialize Fomantic UI Theme
 
 ### Step 1: Install Fomantic UI
@@ -103,7 +83,7 @@ semantic/dist/semantic.min.css
 semantic/dist/semantic.min.js
 ```
 
-- Add types/fomantic-ui.d.ts and add
+- Add src/types/fomantic-ui.d.ts and add
 
 ```
 // If you ever import other Fomantic files, you can broaden it slightly:
@@ -114,7 +94,7 @@ semantic/dist/semantic.min.js
 declare module '*semantic/dist/semantic.min.js';
 ```
 
-- In your React app, import them like this:
+- In your React app (main.tsx), import them like this:
 
 ```ts
 // import before fomantic-js
@@ -144,59 +124,4 @@ await import('../semantic/dist/semantic.min.js');
 - You can mix themes per component (e.g., Material globals + GitHub buttons) as described above.
 
 ---
-
-## 4️⃣ Development and Build Scripts
-
-### During development
-
-Start the Vite dev server on [http://localhost:5173](http://localhost:5173):
-
-```bat
-_client+debug.bat
-```
-
-```bash
-yarn frontend
-```
-
-### Build for deployment and test
-
-Start preview server on [http://localhost:4173](http://localhost:4173):
-
-```bat
-_client.bat
-```
-
-```bash
-yarn clean
-yarn build
-yarn preview
-```
-
-### To create an Electron application
-
-```bat
-_electron-build-project.bat
-```
-
-```bash
-node clean.cjs
-yarn build
-npx electron-builder
-```
-
-### Detailed description of `package.json` scripts
-
-| Script | Command | Description |
-|--------|---------|-------------|
-| `frontend` | `vite` | Starts the Vite development server with hot-reloading. |
-| `build` | `tsc -b && vite build` | Builds the TypeScript project and bundles frontend assets for production. |
-| `preview` | `vite preview` | Serves the production build locally for testing. |
-| `start` | `npm run build && electron .` | Builds the frontend and runs the Electron app for development. |
-| `lint` | `eslint .` | Runs ESLint on the project source code to check for code quality and potential errors. |
-| `format` | `prettier --write ./src` | Formats all source files in the `src` folder using Prettier. |
-| `clean` | `node clean.cjs` | Cleans build artifacts, including Electron and frontend builds. |
-
-
-
 
