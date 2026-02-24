@@ -15,19 +15,19 @@ export function createLogger(moduleName: string): LoggerWrapper {
 	return {
 		devModuleLogger,
 		error(fn: string, data?: Record<string, any>, msg?: string, err?: Error) {
-			if (this.devModuleLogger) this.devModuleLogger.error(`[${new Date().toISOString()}] [${moduleName}] [${fn}] ${msg || err?.message || ""}`, data || {});
+			if (this.devModuleLogger) this.devModuleLogger.error(`[${new Date().toISOString().split('T')[1]}] [${moduleName}] [${fn}] ${msg || err?.message || ""}`, data || {});
 		},
 		warn(fn: string, data?: Record<string, any>, msg?: string) {
-			if (this.devModuleLogger) this.devModuleLogger.warn(`[${new Date().toISOString()}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
+			if (this.devModuleLogger) this.devModuleLogger.warn(`[${new Date().toISOString().split('T')[1]}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
 		},
 		info(fn: string, data?: Record<string, any>, msg?: string) {
-			if (this.devModuleLogger) this.devModuleLogger.info(`[${new Date().toISOString()}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
+			if (this.devModuleLogger) this.devModuleLogger.info(`[${new Date().toISOString().split('T')[1]}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
 		},
 		debug(fn: string, data?: Record<string, any>, msg?: string) {
-			if (this.devModuleLogger) this.devModuleLogger.debug(`[${new Date().toISOString()}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
+			if (this.devModuleLogger) this.devModuleLogger.debug(`[${new Date().toISOString().split('T')[1]}] [${moduleName}] [${fn}] ${msg || ""}`, data || {});
 		},
 		trace(fn: string, data?: Record<string, any>, msg?: string) {
-			if (this.devModuleLogger) this.devModuleLogger.trace(`[${new Date().toISOString()}] [${moduleName}] [${fn}] ${msg || ""}`, undefined);
+			if (this.devModuleLogger) this.devModuleLogger.trace(`[${new Date().toISOString().split('T')[1]}] [${moduleName}] [${fn}] ${msg || ""}`, undefined);
 		},
 	};
 }
