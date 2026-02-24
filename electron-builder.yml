@@ -1,0 +1,24 @@
+appId: com.react-electron
+productName: react-electron
+directories:
+  output: release-builds
+icon: public/icon-256x256.ico
+asar: false
+files:
+  - 'dist/**'
+  - 'electron/**'
+  - '!semantic/**'
+  - '!doc/**'
+  - '!node_modules/**'
+  - '!.idea/**'
+  - '!**/node_modules/**'
+  - '!scripts/**'
+mac:
+  target: dmg
+win:
+  target: nsis
+  signAndEditExecutable: true
+  icon: public/icon-256x256.ico
+linux:
+  target: AppImage
+  icon: public/icon-256x256.png

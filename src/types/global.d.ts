@@ -1,0 +1,1 @@
+declare const __ELECTRON__: boolean;
