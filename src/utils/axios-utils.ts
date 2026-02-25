@@ -1,5 +1,5 @@
-import axios, {type AxiosRequestConfig} from 'axios';
-import {queryURLPart} from "@local/local-commons-utils";
+import axios, {type AxiosRequestConfig, type AxiosResponseHeaders} from 'axios';
+import {isAbortError, queryURLPart} from "@local/local-commons-utils";
 import {createLogger} from "./logger.ts";
 
 export function createAxiosInstance(baseURL: string, defaultContentType: string | undefined, defaultAccept: string | undefined, showErrorFn: (errorMessage: string) => void | undefined) {
@@ -13,11 +13,16 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 			'Content-Type': defaultContentType || 'application/json',
 			'Accept': defaultAccept || 'application/json',
 		},
+		paramsSerializer: {
+			indexes: null, // 👈 don't use key[]=... for multiple values, use multiple key=value instead
+		},
 	});
 
 	const LOGGER = createLogger("axios");
 
 	function onError(data: any, error: any) {
+		if (isAbortError(error)) throw error;
+
 		let msg = "Error occured";
 		if (error.response) {
 			// The request was made and the server responded with a status code
@@ -48,17 +53,19 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 	}
 
 	function curlCommand(method: string, url: string, queryParams: any, accept: string | undefined) {
+		const methodStr = method === 'HEAD' ? '--head' : `-X ${method}`;
 		const queryURLPartString = queryParams ? queryURLPart(queryParams) : "";
-		const acceptString = `-H 'Accept: ${accept || defaultAccept}'`;
-		return `curl -X ${method} ${acceptString} '${baseURL}${url}${queryURLPartString}'`;
+		const acceptString = method === 'HEAD' ? "" : `-H 'Accept: ${accept || defaultAccept}'`;
+		return `curl ${methodStr} ${acceptString} '${baseURL}${url}${queryURLPartString}'`;
 	}
 
 	function curlCommandPayload(method: string, url: string, queryParams: any, accept: string | undefined, contentType: string | undefined, body: any) {
+		const methodStr = `-X ${method}`;
 		const bodyString = body ? "--json '" + JSON.stringify(body) + "'" : "";
 		const contentTypeString = body ? `-H 'Content-Type: ${contentType || defaultContentType}'` : "";
 		const queryURLPartString = queryParams ? queryURLPart(queryParams) : "";
 		const acceptString = `-H 'Accept: ${accept || defaultAccept}'`;
-		return `curl -X ${method} ${contentTypeString} ${acceptString} '${baseURL}${url}${queryURLPartString}' ${bodyString}`;
+		return `curl ${methodStr} ${contentTypeString} ${acceptString} '${baseURL}${url}${queryURLPartString}' ${bodyString}`;
 	}
 
 	function createConfig(contentType: string | undefined, accept: string | undefined, queryParams: Record<string, any> | undefined, abortSignal: AbortSignal | undefined) {
@@ -70,7 +77,30 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		return config;
 	}
 
-	async function HEAD<T>(url: string, queryParams?: any) {
+	function headersToRecord(
+		headers: AxiosResponseHeaders | Record<string, any>
+	): Record<string, string> {
+		const result: Record<string, string> = {};
+
+		for (const [key, value] of Object.entries(headers)) {
+			if (value == null) continue;
+
+			if (Array.isArray(value)) {
+				result[key] = value.join(", ");
+			} else {
+				result[key] = String(value);
+			}
+		}
+
+		return result;
+	}
+
+	function dateDiff(date1: Date, date2: Date = new Date()) {
+		return date2.getTime() - date1.getTime();
+	}
+
+	async function HEAD<T>(url: string, queryParams?: any): Promise<Record<string, string>> {
+		const start = new Date();
 		const config = createConfig(undefined, undefined, queryParams, undefined);
 		const _ = {
 			curlCommand: curlCommand('HEAD', url, queryParams, undefined),
@@ -79,20 +109,23 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		try {
 			LOGGER.info("HEAD", _);
 			const response = await axiosInstance.head<T>(url, config);
+			const headerRecord = headersToRecord(response.headers);
 			LOGGER.info("HEAD", {
 				..._,
+				duration: dateDiff(start),
 				status: response.status,
 				statusText: response.statusText,
-				response: response.data != null
+				headers: headerRecord
 			});
-			return response.data;
+			return headerRecord;
 		} catch (error: any) {
 			onError(_, error);
 			throw error;
 		}
 	}
 
-	async function GET<T>(url: string, queryParams?: any, accept?: string | undefined, abortSignal?: AbortSignal) {
+	async function GET<T>(url: string, queryParams?: any, accept?: string | undefined, abortSignal?: AbortSignal): Promise<T> {
+		const start = new Date();
 		const config = createConfig(undefined, accept, queryParams, abortSignal);
 		const _ = {
 			curlCommand: curlCommand('GET', url, queryParams, accept),
@@ -103,11 +136,14 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		try {
 			LOGGER.info("GET", _);
 			const response = await axiosInstance.get<T>(url, config);
+			const headerRecord = headersToRecord(response.headers);
 			LOGGER.info("GET", {
 				..._,
+				duration: dateDiff(start),
 				status: response.status,
 				statusText: response.statusText,
-				response: response.data != null
+				response: response.data != null,
+				headers: headerRecord
 			});
 			return response.data;
 		} catch (error: any) {
@@ -116,7 +152,8 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		}
 	}
 
-	async function DELETE<T>(url: string, queryParams?: any, accept?: string | undefined) {
+	async function DELETE<T>(url: string, queryParams?: any, accept?: string | undefined): Promise<T> {
+		const start = new Date();
 		const config = createConfig(undefined, accept, queryParams, undefined);
 		const _ = {
 			curlCommand: curlCommand('DELETE', url, queryParams, accept),
@@ -126,11 +163,14 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		try {
 			LOGGER.info("DELETE", _);
 			const response = await axiosInstance.delete<T>(url, config);
+			const headerRecord = headersToRecord(response.headers);
 			LOGGER.info("DELETE", {
 				..._,
+				duration: dateDiff(start),
 				status: response.status,
 				statusText: response.statusText,
-				response: response.data != null
+				response: response.data != null,
+				headers: headerRecord
 			});
 			return response.data;
 		} catch (error: any) {
@@ -139,8 +179,9 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		}
 	}
 
-	async function POST<T>(url: string, body: any, queryParams?: any, contentType?: string | undefined, accept?: string | undefined) {
+	async function POST<T>(url: string, body: any, queryParams?: any, contentType?: string | undefined, accept?: string | undefined): Promise<T> {
 		if (body == null) throw new Error("body is undefined");
+		const start = new Date();
 		const config = createConfig(contentType, accept, queryParams, undefined);
 		const _ = {
 			curlCommand: curlCommandPayload('POST', url, queryParams, accept, contentType, body),
@@ -151,11 +192,14 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		try {
 			LOGGER.info("POST", _);
 			const response = await axiosInstance.post<T>(url, body, config);
+			const headerRecord = headersToRecord(response.headers);
 			LOGGER.info("POST", {
 				..._,
+				duration: dateDiff(start),
 				status: response.status,
 				statusText: response.statusText,
-				response: response.data != null
+				response: response.data != null,
+				headers: headerRecord
 			});
 			return response.data;
 		} catch (error: any) {
@@ -164,8 +208,9 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		}
 	}
 
-	async function PUT<T>(url: string, body: any, queryParams?: any, contentType?: string | undefined, accept?: string | undefined) {
+	async function PUT<T>(url: string, body: any, queryParams?: any, contentType?: string | undefined, accept?: string | undefined): Promise<T> {
 		if (body == null) throw new Error("body is undefined");
+		const start = new Date();
 		const config = createConfig(contentType, accept, queryParams, undefined);
 		const _ = {
 			curlCommand: curlCommandPayload('PUT', url, queryParams, accept, contentType, body),
@@ -176,11 +221,14 @@ export function createAxiosInstance(baseURL: string, defaultContentType: string 
 		try {
 			LOGGER.info("PUT", _);
 			const response = await axiosInstance.put<T>(url, body, config);
+			const headerRecord = headersToRecord(response.headers);
 			LOGGER.info("PUT", {
 				..._,
+				duration: dateDiff(start),
 				status: response.status,
 				statusText: response.statusText,
-				response: response.data != null
+				response: response.data != null,
+				headers: headerRecord
 			});
 			return response.data;
 		} catch (error: any) {
